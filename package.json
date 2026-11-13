@@ -1,0 +1,58 @@
+{
+  "name": "tunc-mcp",
+  "version": "0.1.0",
+  "description": "MCP client for Tunc Orb (agent memory database), Tunc Art (artifact storage and private file sharing) and Tunc Doc (documents, spreadsheets, decks).",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "agent-memory",
+    "agent-database",
+    "memory",
+    "agent",
+    "agents",
+    "multi-agent",
+    "multi-agent-orchestration",
+    "artifact",
+    "artifacts",
+    "artifact-storage",
+    "file-sharing",
+    "private-links",
+    "storage",
+    "database",
+    "records",
+    "documents",
+    "spreadsheets",
+    "slide-decks",
+    "a2a",
+    "agent-to-agent",
+    "ai-agents",
+    "llm",
+    "tunc"
+  ],
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./client": "./src/client.js"
+  },
+  "bin": {
+    "tunc-mcp": "./bin/cli.js"
+  },
+  "files": [
+    "src",
+    "bin",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "license": "MIT",
+  "homepage": "https://tuncorb.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TUNC-AI/tunc-mcp.git"
+  }
+}
