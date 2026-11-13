@@ -99,15 +99,20 @@ export class TuncMcpClient {
     if (session) this.#sessionId = session;
 
     const text = await response.text();
+    const body = parseBody(response.headers.get('content-type'), text);
 
     if (response.status === 401) {
+      // The server knows why it refused: missing key, revoked, or wrong scope.
+      // Keep its words and add ours, rather than replacing a specific answer
+      // with a generic one.
+      const server = body?.error?.message;
       throw new TuncMcpError(
-        'Unauthorized. The API key is missing, revoked, or not scoped for this service.',
-        { status: 401, body: text },
+        server
+          ? `${server} (the API key is missing, revoked, or not scoped for this service)`
+          : 'Unauthorized. The API key is missing, revoked, or not scoped for this service.',
+        { status: 401, code: body?.error?.code, body },
       );
     }
-
-    const body = parseBody(response.headers.get('content-type'), text);
 
     if (!response.ok) {
       throw new TuncMcpError(body?.error?.message ?? `HTTP ${response.status}`, {

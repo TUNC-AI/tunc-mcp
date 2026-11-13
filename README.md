@@ -45,6 +45,45 @@ npm install tunc-mcp
 Node 18 or newer. No dependencies. Get an API key at
 <https://tunchub.com/account/keys/new> — you can scope it read-only.
 
+## Options
+
+Every helper takes an object. Only the key is required, and it falls back to `TUNC_API_KEY`.
+
+```js
+import { orb, art, doc, connect, SERVERS } from 'tunc-mcp';
+
+const memory = orb({
+  apiKey: process.env.TUNC_API_KEY,
+  endpoint: 'https://mcp.tuncorb.com/mcp', // override: staging, a proxy, or a local mock
+});
+```
+
+- `apiKey` — defaults to `TUNC_API_KEY`. It is checked when the client is constructed, so a missing key fails immediately rather than on the first call.
+- `endpoint` — replaces the built-in URL for that service. This is what you use to point the client at a test server.
+- `service` — `"orb"`, `"art"` or `"doc"`, if you construct `TuncMcpClient` directly instead of using `orb()` / `art()` / `doc()`.
+
+`SERVERS` is the map of default endpoints. `connect(key)` returns all three clients at once.
+
+## What comes back
+
+`callTool()` returns the server's MCP result unchanged:
+
+```js
+{ content: [{ type: "text", text: "<json string>" }], structuredContent: { /* … */ }, isError: false }
+```
+
+Confusingly, the same payload often appears twice — as `structuredContent` and again serialised into `content[0].text`. Use `structuredContent` when it is there. When you only want the text, `callText()` unwraps it for you:
+
+```js
+const text = await memory.callText('data_read', { name: 'contacts/ada' });
+```
+
+Tool names come from the server, not from this package. Call `listTools()` to see what a service actually offers before writing against it — the list is not hard-coded here and changes as the servers change.
+
+## ESM only
+
+This package is ESM. In a CommonJS project, either set `"type": "module"` in `package.json` or import it from an `.mjs` file. Otherwise Node fails with `SyntaxError: Cannot use import statement outside a module`.
+
 ## Use
 
 ```js

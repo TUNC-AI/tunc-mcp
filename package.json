@@ -1,6 +1,6 @@
 {
   "name": "tunc-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MCP client for Tunc Orb (agent memory database), Tunc Art (artifact storage and private file sharing) and Tunc Doc (documents, spreadsheets, decks).",
   "keywords": [
     "mcp",
