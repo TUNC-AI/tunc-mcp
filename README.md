@@ -91,11 +91,41 @@ import { orb, art, doc } from 'tunc-mcp';
 
 const memory = orb(); // reads TUNC_API_KEY
 
+// Every tool takes an `operation` that picks what it does. Ask for a shape the
+// server does not have and you get invalid_arguments back, so call listTools()
+// once and read the real schemas rather than trusting an example.
+//
+// data_write  operation: create | append
+// data_read   operation: shelves | list | get | log | search | status
+// data_update operation: replace | patch        (needs if_revision)
+// data_delete operation: record | entries | log (needs if_revision)
+
 // Agent memory: durable records, revision-guarded
 await memory.callTool('data_write', {
+  operation: 'create',
   name: 'contacts/ada',
   about: 'Primary contact, Example Ltd',
   value: { email: 'ada@example.com', timezone: 'Europe/London' },
+});
+
+const record = await memory.callTool('data_read', {
+  operation: 'get',
+  name: 'contacts/ada',
+});
+const revision = JSON.parse(record.content[0].text).revision;
+
+// Change it only if nobody else has, and delete it the same way
+await memory.callTool('data_update', {
+  operation: 'patch',
+  name: 'contacts/ada',
+  if_revision: revision,
+  patch: [{ op: 'replace', path: '/timezone', value: 'Europe/Paris' }],
+});
+
+await memory.callTool('data_delete', {
+  operation: 'record',
+  name: 'contacts/ada',
+  if_revision: revision,
 });
 
 // Artifacts: store a file, get a private link
