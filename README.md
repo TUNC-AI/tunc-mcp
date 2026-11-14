@@ -128,20 +128,27 @@ await memory.callTool('data_delete', {
   if_revision: revision,
 });
 
-// Artifacts: store a file, get a private link
+// Artifacts: store a file, get a private link back.
+// art_read is operation list|get; art_write is operation create; art_delete
+// takes an artifact_id and nothing else.
 const files = art();
-await files.callTool('art_write', {
-  title: 'quarterly-report.pdf',
+const stored = await files.callTool('art_write', {
+  operation: 'create',
+  name: 'quarterly-report.pdf',
   mime_type: 'application/pdf',
   content_base64: base64Bytes,
 });
+// the result nests the artifact, keyed by `id`, with a viewer_url to share
+const artifactId = JSON.parse(stored.content[0].text).artifact.id;
 
-// Documents: build something a human can open and edit
+// Documents: build something a human can open and edit.
+// doc_create needs only a title; doc_read, doc_write and doc_delete take `doc`.
 const docs = doc();
-await docs.callTool('doc_create', {
+const made = await docs.callTool('doc_create', {
   title: 'Q4 summary',
   markdown: '# Q4\n\nRevenue up 12%.',
 });
+const docId = JSON.parse(made.content[0].text).result.doc.id;
 ```
 
 Discover what any service offers:
