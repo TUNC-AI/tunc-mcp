@@ -7,9 +7,9 @@
 // Tunc Doc — documents, spreadsheets and slide decks, import/export DOCX,
 //            XLSX, PPTX and PDF.
 
-import { SERVERS, TuncMcpClient, TuncMcpError, parseBody } from './client.js';
+import { SERVERS, TuncMcpClient, TuncMcpError, VERSION, parseBody } from './client.js';
 
-export { SERVERS, TuncMcpClient, TuncMcpError, parseBody };
+export { SERVERS, TuncMcpClient, TuncMcpError, VERSION, parseBody };
 
 export function orb(options = {}) {
   return new TuncMcpClient({ service: 'orb', ...options });

@@ -57,6 +57,8 @@ export function parseBody(contentType, text) {
   return last;
 }
 
+export const VERSION = '0.1.4';
+
 export class TuncMcpClient {
   #endpoint;
   #apiKey;
@@ -142,7 +144,7 @@ export class TuncMcpClient {
     const result = await this.#rpc('initialize', {
       protocolVersion: '2025-06-18',
       capabilities: {},
-      clientInfo: { name: 'tunc-mcp', version: '0.1.0' },
+      clientInfo: { name: 'tunc-mcp', version: VERSION },
     });
     // Notifications carry no id and expect no body.
     await fetch(this.#endpoint, {
