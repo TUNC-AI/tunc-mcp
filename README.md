@@ -36,6 +36,12 @@ lost-update bug — the classic multi-agent failure where a plausible but wrong
 number survives — into a loud retry. If you run agent swarms that share state,
 use it.
 
+That is Orb, and it is strict — a stale write is refused, nothing is committed.
+**Doc is the opposite on purpose:** `doc_write`'s `base_revision` is a merge
+base, not a lock, so a stale write usually merges into the newer text and
+succeeds. `doc_conflict` appears only when the edits actually collide. Do not
+wrap both in the same "always pass the revision, retry on conflict" helper.
+
 ## Install
 
 ```bash
@@ -141,8 +147,18 @@ const stored = await files.callTool('art_write', {
 // the result nests the artifact, keyed by `id`, with a viewer_url to share
 const artifactId = JSON.parse(stored.content[0].text).artifact.id;
 
+// Deleting tombstones rather than erases: art_read get still resolves the
+// artifact afterwards, reporting status "deleted", availability "deleted" and
+// viewer_url null, and the content URL answers 401. Do not test for a delete by
+// expecting get to throw — check the status, or that list no longer returns it.
+await files.callTool('art_delete', { artifact_id: artifactId });
+const after = await files.callTool('art_read', { operation: 'get', artifact_id: artifactId });
+console.log(JSON.parse(after.content[0].text).artifact.status); // "deleted"
+
 // Documents: build something a human can open and edit.
-// doc_create needs only a title; doc_read, doc_write and doc_delete take `doc`.
+// doc_create needs a title AND a markdown body (the schema says only title is
+// required, which is wrong: a doc without markdown gets invalid_arguments).
+// doc_read, doc_write and doc_delete take `doc`.
 const docs = doc();
 const made = await docs.callTool('doc_create', {
   title: 'Q4 summary',
@@ -165,7 +181,7 @@ export TUNC_API_KEY=tunc_...
 
 npx tunc-mcp services
 npx tunc-mcp tools --service orb
-npx tunc-mcp call data_read '{"name":"contacts/ada"}' --service orb
+npx tunc-mcp call data_read '{"operation":"get","name":"contacts/ada"}' --service orb
 ```
 
 ## Wire it into an MCP client
@@ -184,6 +200,30 @@ orchestrator. Point it at the endpoint and pass the key as a bearer header:
   }
 }
 ```
+
+## OAuth instead of a key
+
+The servers accept a resource-bound OAuth token as well as an API key. That
+matters for Doc: **`mcp.tuncdoc.com` advertises the same scope names as Orb
+(`orb.read`, `orb.write`, `orb.delete`)**, so a token without a resource binding
+defaults to the Orb audience and Doc rejects it as "not scoped for this service".
+Include the resource in the device-authorization request:
+
+```
+resource=https://mcp.tuncdoc.com/mcp
+```
+
+That also flips the approval page to the right domain — an unbound grant sends
+people to `tuncorb.com/connect` even when they are authorising Doc.
+
+```js
+doc({ apiKey: deviceAccessToken });
+```
+
+Revoking the token (`POST /oauth/revoke`) returns `200`, but the access token
+keeps working until it expires — about 15 minutes. Revocation kills the refresh
+path, not an already-issued access token, so a successful revoke is not proof
+the credential is dead this second.
 
 ## Agent-to-agent
 
@@ -232,6 +272,8 @@ service; the message says which.
 ### 并发写入
 
 `data_update` 接受 `if_revision`。两个智能体写同一条记录时不会互相覆盖：后到的写入收到 `revision_conflict`，重新读取后重试。这把多智能体最常见的“静默丢更新”故障，变成一个可以被发现的错误。
+
+注意两个与直觉不同的行为：**Doc** 的 `doc_write` 把 `base_revision` 当作合并基线而不是锁，过期版本通常会被合并而不是报错，只有在编辑内容真正冲突时才返回 `doc_conflict`；**Art** 的删除是标记删除，删除之后 `get` 仍然能读到该记录，但 `status` 为 `deleted`、`viewer_url` 为空、内容链接返回 `401`。
 
 ```bash
 npm install tunc-mcp
