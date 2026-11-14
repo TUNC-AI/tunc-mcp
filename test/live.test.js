@@ -44,7 +44,9 @@ function errorCode(result) {
 test('orb refuses a stale write', { skip }, async () => {
   const memory = orb({ apiKey: keyFor('TUNC_ORB_TOKEN') });
   const name = 'qa/tunc-mcp/live-cas';
-  await memory.callTool('data_write', { operation: 'create', name, value: { n: 1 } });
+  await memory.callTool('data_write', {
+    operation: 'create', name, about: 'live CAS check', value: { n: 1 },
+  });
   try {
     const first = payload(await memory.callTool('data_read', { operation: 'get', name })).revision;
 
